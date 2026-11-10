@@ -28,6 +28,13 @@ public abstract class Customer {
             satisfaction = 0;
         }
     }
+    
+    public void addSatisfaction(int amount) {
+        this.satisfaction += amount;
+        if (this.satisfaction > 100) {
+            this.satisfaction = 100;
+        }
+    }
 
     public void cancel() {
         this.state = CustomerState.CANCELLED;
