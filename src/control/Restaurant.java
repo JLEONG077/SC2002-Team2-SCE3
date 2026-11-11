@@ -29,18 +29,16 @@ public class Restaurant {
         this.queue = new LinkedList<>();
         this.activeCustomers = new ArrayList<>();
         
-        // Stage 3 Menu including Standard items and Combo Meals with pricing hooks
         this.menu = new ArrayList<>();
-        this.menu.add(new MenuItem("Burger", 1200, 2));
-        this.menu.add(new MenuItem("Fries", 600, 1));
-        this.menu.add(new MenuItem("Drink", 400, 1));
-        
-        // Adding a Combo Meal option (e.g., Burger + Drink bundle with 15% discount)
-        List<MenuItem> burgerComboItems = List.of(
-            new MenuItem("Burger", 1200, 2),
-            new MenuItem("Drink", 400, 1)
+        this.menu.add(new MenuItem("Salad", 900, 1));     // $9.00, 1 unit
+        this.menu.add(new MenuItem("Burger", 1500, 1));   // $15.00, 1 unit
+        this.menu.add(new MenuItem("Pasta", 1800, 2));    // $18.00, 2 units
+      
+        List<MenuItem> saladPastaCombo = List.of(
+            new MenuItem("Salad", 900, 1),
+            new MenuItem("Pasta", 1800, 2)
         );
-        this.menu.add(new ComboMeal("Burger Combo", burgerComboItems, 0.15));
+        this.menu.add(new ComboMeal("Salad & Pasta Combo", saladPastaCombo));
     }
 
     public void enqueue(Customer c) { 
