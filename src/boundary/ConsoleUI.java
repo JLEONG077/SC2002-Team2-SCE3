@@ -70,7 +70,7 @@ public class ConsoleUI {
         }
         return new StaffAction(StaffAction.ActionType.WAIT, -1);
     }
-    
+
     public boolean promptActivateHappyHour() {
         System.out.print("Do you want to activate Happy Hour for this turn? (y/n): ");
         String input = scanner.nextLine().trim();
@@ -83,7 +83,7 @@ public class ConsoleUI {
             System.out.println("  [Empty]");
         } else {
             for (Customer c : restaurant.getQueue()) {
-                System.out.println("  - " + c.getClass().getSimpleName() + " #" + c.getId() + " (Sat: " + c.getSatisfaction() + ")");
+                System.out.println("  - " + customerLabel(c) + " (Sat: " + c.getSatisfaction() + ")");
             }
         }
 
@@ -93,10 +93,24 @@ public class ConsoleUI {
                 System.out.println("- Table #" + t.getId() + ": [Free]");
             } else {
                 Customer c = t.getOccupant();
-                System.out.println("- Table #" + t.getId() + ": " + c.getClass().getSimpleName() + 
-                                   " #" + c.getId() + " (Sat: " + c.getSatisfaction() + ", State: " + c.getState() + ")");
+                System.out.println("- Table #" + t.getId() + ": " + customerLabel(c) +
+                                   " (Sat: " + c.getSatisfaction() + ", State: " + c.getState() + ")");
             }
         }
+    }
+
+    /**
+     * Builds a display label for a customer that includes their type tag
+     * (e.g. "[VIP]", "[CRITIC]", "[REGULAR]") plus ID.
+     * Derives the tag from the class name rather than an instanceof/type-check
+     * chain, so new Customer subclasses are labeled automatically.
+     */
+    private String customerLabel(Customer c) {
+        String tag = c.getClass().getSimpleName().replace("Customer", "").toUpperCase();
+        if (tag.isEmpty()) {
+            tag = "CUSTOMER";
+        }
+        return "[" + tag + "] #" + c.getId();
     }
 
     public void showTurnSummary(Restaurant restaurant, int turn) {
@@ -124,7 +138,7 @@ public class ConsoleUI {
         scanner.nextLine(); // consume newline
         return val;
     }
-    
+
     // Display the start of a turn
     public void showTurnStart(Restaurant restaurant, int turn) {
         System.out.println("\n--------------------------------------------------");
