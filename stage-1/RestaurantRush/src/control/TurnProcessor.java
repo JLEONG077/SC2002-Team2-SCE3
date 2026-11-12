@@ -6,7 +6,6 @@ import entity.Cashier;
 import entity.Chef;
 import entity.Customer;
 import entity.CustomerState;
-import entity.Host;
 import entity.StaffAction;
 import entity.Table;
 import entity.Waiter;
@@ -20,35 +19,9 @@ public class TurnProcessor {
         this.restaurant = restaurant;
         this.ui = ui;
     }
-    
     public void runTurn(int turn) {
         processArrivals(turn);
 
-        // 1. Manager Happy Hour activation prompt
-        PricingPolicy.handleManagerPrompt(ui);
-
-        // 2. Apply Happy Hour satisfaction bonus (+15) for waiting/seated/ordered customers
-        restaurant.applyHappyHourSatisfactionBonus();
-
-        // 3. Host Action
-        boolean hostDone = false;
-        while (!hostDone) {
-            StaffAction action = ui.promptHostAction(restaurant);
-            Host host = restaurant.getHost();
-            if (host != null) {
-                ActionResult result = host.perform(action, restaurant, turn);
-                if (result.isSuccess()) {
-                    System.out.println("[Host] " + result.getMessage());
-                    hostDone = true;
-                } else {
-                    ui.showError(result.getMessage());
-                }
-            } else {
-                hostDone = true;
-            }
-        }
-
-        // 4. Waiter Action
         boolean waiterDone = false;
         while (!waiterDone) {
             StaffAction action = ui.promptWaiterAction(restaurant);
@@ -62,7 +35,6 @@ public class TurnProcessor {
             }
         }
 
-        // 5. Chef Action
         boolean chefDone = false;
         while (!chefDone) {
             StaffAction action = ui.promptChefAction(restaurant);
@@ -75,9 +47,6 @@ public class TurnProcessor {
                 ui.showError(result.getMessage());
             }
         }
-
-        // 6. Tick down Happy Hour duration at turn end
-        PricingPolicy.tickTurn();
 
         processEatingAndPayment(turn);
         applyWaitingLoss(turn);
@@ -93,18 +62,17 @@ public class TurnProcessor {
     }
 
     private void processEatingAndPayment(int turn) {
-        // 1. Transition served customers to READY_TO_PAY
-        for (Table table : restaurant.getTables()) {
-            if (!table.isFree()) {
-                Customer customer = table.getOccupant();
-                
-                if (customer.getState() == CustomerState.SERVED) {
-                    customer.setState(CustomerState.READY_TO_PAY);
+        for (Table t : restaurant.getTables()) {
+            if (!t.isFree()) {
+                Customer c = t.getOccupant();
+                if (c.getState() == CustomerState.SERVED) {
+                    c.setState(CustomerState.EATING);
+                } else if (c.getState() == CustomerState.EATING) {
+                    c.setState(CustomerState.READY_TO_PAY);
                 }
             }
         }
 
-        // 2. Handle Cashier payment collection for customers ready to pay
         Cashier cashier = new Cashier();
         Customer readyToPay = restaurant.getOldestReadyToPayCustomer();
         if (readyToPay != null) {
