@@ -13,8 +13,8 @@ public class Restaurant {
     private Queue<Customer> queue;
     private List<Customer> activeCustomers;
     private List<MenuItem> menu;
-    private int happyHourTurnsRemaining;
-    private boolean happyHourUsed;
+    private int happyHourTurnsRemaining = 0;
+    private boolean happyHourUsed = false;
 
     public Restaurant() {
         this.revenueCents = 0;

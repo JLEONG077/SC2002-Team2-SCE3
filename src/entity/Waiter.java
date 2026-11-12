@@ -9,7 +9,6 @@ public class Waiter extends Staff {
         super(name);
     }
 
-    @Override
     public ActionResult perform(StaffAction action, Restaurant restaurant, int turn) {
         if (action == null) {
             return new ActionResult(false, "No action specified.");
@@ -51,10 +50,10 @@ public class Waiter extends Staff {
     public ActionResult takeOrder(Customer customer, Restaurant restaurant, int turn) {
         List<MenuItem> menu = restaurant.getMenu();
         MenuItem chosen = customer.chooseItem(menu);
-        
+
         int basePrice = chosen.getPriceCents();
         int priceAfterVIP = customer.discount(basePrice);
-        
+
         int finalPrice = priceAfterVIP;
         if (restaurant.isHappyHourActive()) {
             finalPrice = (int) Math.round(priceAfterVIP * 0.80);
