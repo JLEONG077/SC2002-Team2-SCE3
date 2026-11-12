@@ -1,11 +1,5 @@
 package control;
 
-import entity.*;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-
 import entity.ActionResult;
 import entity.Chef;
 import entity.Customer;
@@ -16,6 +10,10 @@ import entity.OrderStatus;
 import entity.Staff;
 import entity.Table;
 import entity.Waiter;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 public class Restaurant {
     private int revenueCents;
@@ -38,9 +36,9 @@ public class Restaurant {
         this.activeCustomers = new ArrayList<>();
         
         this.menu = new ArrayList<>();
-        this.menu.add(new MenuItem("Burger", 1200, 2));
-        this.menu.add(new MenuItem("Fries", 600, 1));
-        this.menu.add(new MenuItem("Drink", 400, 1));
+        this.menu.add(new MenuItem("Salad", 900, 1));
+        this.menu.add(new MenuItem("Burger", 1500, 1));
+        this.menu.add(new MenuItem("Pasta", 1800, 2));
     }
 
     public void enqueue(Customer c) {
@@ -154,6 +152,19 @@ public class Restaurant {
             if (c.getState() == CustomerState.PAID) count++;
         }
         return count;
+    }
+
+    public float averagePaidSatisfaction() {
+        int sum = 0;
+        int count = 0;
+        for (Customer c : activeCustomers) {
+            if (c.getState() == CustomerState.PAID) {
+                sum += c.getSatisfaction();
+                count++;
+            }
+        }
+        if (count == 0) return 0.0f;
+        return (float) sum / count;
     }
 
     public List<Table> getTables() { return tables; }

@@ -1,14 +1,6 @@
 package control;
 
 import boundary.ConsoleUI;
-import entity.ActionResult;
-import entity.Cashier;
-import entity.Chef;
-import entity.Customer;
-import entity.CustomerState;
-import entity.StaffAction;
-import entity.Table;
-import entity.Waiter;
 import entity.*;
 
 public class TurnProcessor {
@@ -19,8 +11,12 @@ public class TurnProcessor {
         this.restaurant = restaurant;
         this.ui = ui;
     }
+
     public void runTurn(int turn) {
-        processArrivals(turn);
+        Customer scheduledCustomer = ArrivalSchedule.customerFor(turn);
+        if (scheduledCustomer != null) {
+            restaurant.enqueue(scheduledCustomer);
+        }
 
         boolean waiterDone = false;
         while (!waiterDone) {
@@ -48,23 +44,19 @@ public class TurnProcessor {
             }
         }
 
-        processEatingAndPayment(turn);
-        applyWaitingLoss(turn);
+        processKitchenAndEatingStates(turn);
+
+        applyWaitingLoss();
+
         ui.showTurnSummary(restaurant, turn);
     }
 
-    private void processArrivals(int turn) {
-        Customer c = ArrivalSchedule.customerFor(turn);
-        if (c != null) {
-            restaurant.enqueue(c);
-            System.out.println("Customer #" + c.getId() + " arrived at turn " + turn + ".");
-        }
-    }
+    private void processKitchenAndEatingStates(int turn) {
 
-    private void processEatingAndPayment(int turn) {
         for (Table t : restaurant.getTables()) {
             if (!t.isFree()) {
                 Customer c = t.getOccupant();
+
                 if (c.getState() == CustomerState.SERVED) {
                     c.setState(CustomerState.EATING);
                 } else if (c.getState() == CustomerState.EATING) {
@@ -75,7 +67,7 @@ public class TurnProcessor {
 
         Cashier cashier = new Cashier();
         Customer readyToPay = restaurant.getOldestReadyToPayCustomer();
-        if (readyToPay != null) {
+        if (readyToPay != null && readyToPay.getState() == CustomerState.READY_TO_PAY) {
             ActionResult paymentResult = cashier.collectPayment(restaurant, turn);
             if (paymentResult.isSuccess()) {
                 System.out.println("[Cashier] " + paymentResult.getMessage());
@@ -83,13 +75,19 @@ public class TurnProcessor {
         }
     }
 
-    private void applyWaitingLoss(int turn) {
+    private void applyWaitingLoss() {
         for (Customer c : restaurant.getActiveCustomers()) {
-            if (!c.hasLeftOrPaid()) {
+            if (!c.hasLeftOrPaid() && (c.getState() == CustomerState.WAITING || c.getState() == CustomerState.SEATED)) {
                 c.loseSatisfaction();
                 if (c.getSatisfaction() <= 0) {
                     c.cancel();
-                    System.out.println("Customer #" + c.getId() + " lost all satisfaction and left!");
+                    for (Table t : restaurant.getTables()) {
+                        if (t.getOccupant() == c) {
+                            t.release();
+                            break;
+                        }
+                    }
+                    System.out.println("Customer #" + c.getId() + " reached 0 satisfaction and left without paying.");
                 }
             }
         }
