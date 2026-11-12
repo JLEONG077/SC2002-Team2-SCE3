@@ -4,6 +4,7 @@ import control.GameConfig;
 import control.Outcome;
 import control.Restaurant;
 import entity.*;
+
 import java.util.List;
 import java.util.Scanner;
 
@@ -13,7 +14,25 @@ public class ConsoleUI {
     public void showTurnStart(Restaurant restaurant, int turn) {
         System.out.println("\n--------------------------------------------------");
         System.out.println("TURN " + turn + " / " + GameConfig.MAX_TURNS);
+        if (restaurant.isHappyHourActive()) {
+            System.out.println("[HAPPY HOUR ACTIVE] Remaining turns: " + restaurant.getHappyHourTurnsRemaining());
+        }
         System.out.println("--------------------------------------------------");
+    }
+
+    public StaffAction promptHostAction(Restaurant restaurant) {
+        System.out.println("\n--- Host Action (Seats at most 1 customer) ---");
+        printRestaurantStatus(restaurant);
+        System.out.println("Choose Host Action:");
+        System.out.println("1. SEAT customer (Enter customer ID)");
+        System.out.println("2. WAIT (Pass turn)");
+        System.out.print("Enter choice (1-2): ");
+        int choice = getIntInput();
+        if (choice == 1) {
+            System.out.print("Enter Customer ID to seat: ");
+            return new StaffAction(ActionType.SEAT, getIntInput());
+        }
+        return new StaffAction(ActionType.WAIT, 0);
     }
 
     public StaffAction promptWaiterAction(Restaurant restaurant) {
@@ -51,8 +70,8 @@ public class ConsoleUI {
             System.out.println("Preparing Orders:");
             for (Order o : preparing) {
                 Customer c = restaurant.findCustomerByOrder(o);
-                String typeTag = getCustomerTypeLabel(c);
-                System.out.println("  - Customer #" + (c != null ? c.getId() : "?") + " [" + typeTag + "] (" + o.getItem().getName() + ") Progress: " + o.getUnitsDone() + "/" + o.getItem().getPrepUnits());
+                String typeLabel = getCustomerTypeLabel(c);
+                System.out.println("  - " + typeLabel + " #" + (c != null ? c.getId() : "?") + " (" + o.getItem().getName() + ") Progress: " + o.getUnitsDone() + "/" + o.getItem().getPrepUnits());
             }
         }
         System.out.println("Choose Chef Action:");
@@ -76,9 +95,9 @@ public class ConsoleUI {
         System.out.println("\n--- Turn " + turn + " Summary ---");
         float avgSat = restaurant.averagePaidSatisfaction();
         String avgSatStr = restaurant.getPaidCount() > 0 ? String.format("%.1f", avgSat) : "N/A";
-        System.out.println("Revenue: $" + String.format("%.2f", restaurant.getRevenueCents() / 100.0) +
-                            " | Paid: " + restaurant.getPaidCount() +
-                            " | Avg Satisfaction: " + avgSatStr);
+        System.out.println("Revenue: $" + String.format("%.2f", restaurant.getRevenueCents() / 100.0) + 
+                           " | Paid: " + restaurant.getPaidCount() + 
+                           " | Avg Satisfaction: " + avgSatStr);
     }
 
     public void showResult(Outcome outcome, Restaurant restaurant) {
@@ -98,7 +117,8 @@ public class ConsoleUI {
             System.out.println("  [Empty]");
         } else {
             for (Customer c : restaurant.getQueue()) {
-                System.out.println("  - Customer #" + c.getId() + " [" + getCustomerTypeLabel(c) + "] (Arrival: " + c.getArrivalTurn() + ", Sat: " + c.getSatisfaction() + ")");
+                String typeLabel = getCustomerTypeLabel(c);
+                System.out.println("  - " + typeLabel + " #" + c.getId() + " (Arrival: " + c.getArrivalTurn() + ", Sat: " + c.getSatisfaction() + ")");
             }
         }
         System.out.println("Tables:");
@@ -107,21 +127,22 @@ public class ConsoleUI {
                 System.out.println("  - Table #" + t.getId() + ": [Free]");
             } else {
                 Customer c = t.getOccupant();
+                String typeLabel = getCustomerTypeLabel(c);
                 String orderInfo = c.getOrder() != null ? (c.getOrder().getItem().getName() + " [" + c.getOrder().getStatus() + "]") : "No Order";
-                System.out.println("  - Table #" + t.getId() + ": Customer #" + c.getId() + " [" + getCustomerTypeLabel(c) + "] (Sat: " + c.getSatisfaction() + ", State: " + c.getState() + ", Order: " + orderInfo + ")");
+                System.out.println("  - Table #" + t.getId() + ": " + typeLabel + " #" + c.getId() + " (Sat: " + c.getSatisfaction() + ", State: " + c.getState() + ", Order: " + orderInfo + ")");
             }
         }
     }
 
     private String getCustomerTypeLabel(Customer c) {
-    if (c instanceof VIPCustomer) {
-        return "VIP Customer";
-    } else if (c instanceof CriticCustomer) {
-        return "Food Critic";
-    } else {
-        return "Regular Customer";
+        if (c instanceof VIPCustomer) {
+            return "VIP Customer";
+        } else if (c instanceof CriticCustomer) {
+            return "Food Critic";
+        } else {
+            return "Regular Customer";
+        }
     }
-}
 
     private int getIntInput() {
         while (!scanner.hasNextInt()) {
@@ -131,4 +152,3 @@ public class ConsoleUI {
         return scanner.nextInt();
     }
 }
-

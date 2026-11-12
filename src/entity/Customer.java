@@ -3,7 +3,7 @@ package entity;
 import java.util.List;
 
 public abstract class Customer {
-	private static int idCounter = 1;
+    private static int idCounter = 1;
     protected int id;
     protected int satisfaction;
     protected int arrivalTurn;
@@ -26,6 +26,13 @@ public abstract class Customer {
         satisfaction -= lossPerTurn();
         if (satisfaction < 0) {
             satisfaction = 0;
+        }
+    }
+
+    public void addSatisfaction(int amount) {
+        satisfaction += amount;
+        if (satisfaction > 100) {
+            satisfaction = 100;
         }
     }
 
