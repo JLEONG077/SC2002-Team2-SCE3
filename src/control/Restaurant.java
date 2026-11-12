@@ -1,15 +1,6 @@
 package control;
 
-import entity.ActionResult;
-import entity.Chef;
-import entity.Customer;
-import entity.CustomerState;
-import entity.MenuItem;
-import entity.Order;
-import entity.OrderStatus;
-import entity.Staff;
-import entity.Table;
-import entity.Waiter;
+import entity.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,6 +13,8 @@ public class Restaurant {
     private Queue<Customer> queue;
     private List<Customer> activeCustomers;
     private List<MenuItem> menu;
+    private int happyHourTurnsRemaining;
+    private boolean happyHourUsed;
 
     public Restaurant() {
         this.revenueCents = 0;
@@ -32,13 +25,22 @@ public class Restaurant {
         this.staff = new ArrayList<>();
         this.staff.add(new Waiter("Alice"));
         this.staff.add(new Chef("Bob"));
+        this.staff.add(new Host("Charlie")); // Host added for Stage 3
+        
         this.queue = new LinkedList<>();
         this.activeCustomers = new ArrayList<>();
         
         this.menu = new ArrayList<>();
-        this.menu.add(new MenuItem("Salad", 900, 1));
-        this.menu.add(new MenuItem("Burger", 1500, 1));
-        this.menu.add(new MenuItem("Pasta", 1800, 2));
+        MenuItem salad = new MenuItem("Salad", 900, 1);
+        MenuItem burger = new MenuItem("Burger", 1500, 1);
+        MenuItem pasta = new MenuItem("Pasta", 1800, 2);
+        this.menu.add(salad);
+        this.menu.add(burger);
+        this.menu.add(pasta);
+        this.menu.add(new ComboMeal(salad, pasta)); // Combo Meal
+
+        this.happyHourTurnsRemaining = 0;
+        this.happyHourUsed = false;
     }
 
     public void enqueue(Customer c) {
@@ -146,14 +148,6 @@ public class Restaurant {
         return (float) sum / activeCustomers.size();
     }
 
-    public int getPaidCount() {
-        int count = 0;
-        for (Customer c : activeCustomers) {
-            if (c.getState() == CustomerState.PAID) count++;
-        }
-        return count;
-    }
-
     public float averagePaidSatisfaction() {
         int sum = 0;
         int count = 0;
@@ -165,6 +159,35 @@ public class Restaurant {
         }
         if (count == 0) return 0.0f;
         return (float) sum / count;
+    }
+
+    public int getPaidCount() {
+        int count = 0;
+        for (Customer c : activeCustomers) {
+            if (c.getState() == CustomerState.PAID) count++;
+        }
+        return count;
+    }
+
+    public boolean activateHappyHour() {
+        if (happyHourUsed || happyHourTurnsRemaining > 0) return false;
+        happyHourUsed = true;
+        happyHourTurnsRemaining = 2; // Lasts for that turn and the next
+        return true;
+    }
+
+    public void decrementHappyHour() {
+        if (happyHourTurnsRemaining > 0) {
+            happyHourTurnsRemaining--;
+        }
+    }
+
+    public boolean isHappyHourActive() {
+        return happyHourTurnsRemaining > 0;
+    }
+
+    public int getHappyHourTurnsRemaining() {
+        return happyHourTurnsRemaining;
     }
 
     public List<Table> getTables() { return tables; }
@@ -183,6 +206,13 @@ public class Restaurant {
     public Chef getChef() {
         for (Staff s : staff) {
             if (s instanceof Chef) return (Chef) s;
+        }
+        return null;
+    }
+
+    public Host getHost() {
+        for (Staff s : staff) {
+            if (s instanceof Host) return (Host) s;
         }
         return null;
     }

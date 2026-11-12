@@ -1,7 +1,6 @@
 package entity;
 
 import java.util.List;
-
 import control.Restaurant;
 
 public class Waiter extends Staff {
@@ -10,6 +9,7 @@ public class Waiter extends Staff {
         super(name);
     }
 
+    @Override
     public ActionResult perform(StaffAction action, Restaurant restaurant, int turn) {
         if (action == null) {
             return new ActionResult(false, "No action specified.");
@@ -51,11 +51,19 @@ public class Waiter extends Staff {
     public ActionResult takeOrder(Customer customer, Restaurant restaurant, int turn) {
         List<MenuItem> menu = restaurant.getMenu();
         MenuItem chosen = customer.chooseItem(menu);
-        int price = customer.discount(chosen.getPriceCents());
-        Order order = new Order(chosen, price);
+        
+        int basePrice = chosen.getPriceCents();
+        int priceAfterVIP = customer.discount(basePrice);
+        
+        int finalPrice = priceAfterVIP;
+        if (restaurant.isHappyHourActive()) {
+            finalPrice = (int) Math.round(priceAfterVIP * 0.80);
+        }
+
+        Order order = new Order(chosen, finalPrice);
         customer.setOrder(order);
         customer.setState(CustomerState.ORDERED);
-        return new ActionResult(true, "Took order for Customer #" + customer.getId() + ": " + chosen.getName() + " ($" + (price/100.0) + ")");
+        return new ActionResult(true, "Took order for " + customer.getClass().getSimpleName() + " #" + customer.getId() + ": " + chosen.getName() + " ($" + (finalPrice/100.0) + ")");
     }
 
     public ActionResult serve(Customer customer, Order order, int turn) {
@@ -63,7 +71,7 @@ public class Waiter extends Staff {
             return new ActionResult(false, "Order is not ready yet.");
         }
         order.markServed();
-        customer.setState(CustomerState.SERVED); 
+        customer.setState(CustomerState.SERVED);
         return new ActionResult(true, "Served order for Customer #" + customer.getId() + ".");
     }
 }
