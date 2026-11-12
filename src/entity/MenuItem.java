@@ -1,7 +1,7 @@
 package entity;
 
 public class MenuItem {
-	private String name;
+    private String name;
     private int priceCents;
     private int prepUnits;
 
@@ -11,15 +11,7 @@ public class MenuItem {
         this.prepUnits = prepUnits;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public int getPriceCents() {
-        return priceCents;
-    }
-
-    public int getPrepUnits() {
-        return prepUnits;
-    }
+    public String getName() { return name; }
+    public int getPriceCents() { return priceCents; }
+    public int getPrepUnits() { return prepUnits; }
 }
