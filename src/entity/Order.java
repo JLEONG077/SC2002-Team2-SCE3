@@ -1,7 +1,7 @@
 package entity;
 
 public class Order {
-    private MenuItem item;
+	private MenuItem item;
     private int lockedPriceCents;
     private int unitsDone;
     private int readyOnTurn;
@@ -16,7 +16,9 @@ public class Order {
     }
 
     public boolean advance(int turn) {
-        if (status != OrderStatus.PREPARING) return false;
+        if (status != OrderStatus.PREPARING) {
+            return false;
+        }
         unitsDone++;
         if (unitsDone >= item.getPrepUnits()) {
             status = OrderStatus.READY;
@@ -26,12 +28,35 @@ public class Order {
         return false;
     }
 
-    public void markServed() { this.status = OrderStatus.READY; }
-    public void markPaid() { this.status = OrderStatus.PAID; }
-    public void cancel() { this.status = OrderStatus.CANCELLED; }
+    public void markServed() {
+        this.status = OrderStatus.READY;
+    }
 
-    public MenuItem getItem() { return item; }
-    public int getLockedPriceCents() { return lockedPriceCents; }
-    public int getUnitsDone() { return unitsDone; }
-    public OrderStatus getStatus() { return status; }
+    public void markPaid() {
+        this.status = OrderStatus.PAID;
+    }
+
+    public void cancel() {
+        this.status = OrderStatus.CANCELLED;
+    }
+
+    public MenuItem getItem() {
+        return item;
+    }
+
+    public int getLockedPriceCents() {
+        return lockedPriceCents;
+    }
+
+    public int getUnitsDone() {
+        return unitsDone;
+    }
+
+    public int getReadyOnTurn() {
+        return readyOnTurn;
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
 }

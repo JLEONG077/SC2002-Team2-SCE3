@@ -3,7 +3,7 @@ package entity;
 import java.util.List;
 
 public abstract class Customer {
-    private static int idCounter = 1;
+	private static int idCounter = 1;
     protected int id;
     protected int satisfaction;
     protected int arrivalTurn;
@@ -40,13 +40,33 @@ public abstract class Customer {
         return satisfaction <= 0 || state == CustomerState.CANCELLED || state == CustomerState.PAID;
     }
 
-    public int getId() { return id; }
-    public int getSatisfaction() { return satisfaction; }
-    public int getArrivalTurn() { return arrivalTurn; }
-    public CustomerState getState() { return state; }
-    public void setState(CustomerState state) { this.state = state; }
-    public Order getOrder() { return order; }
-    public void setOrder(Order order) { this.order = order; }
+    public int getId() {
+        return id;
+    }
+
+    public int getSatisfaction() {
+        return satisfaction;
+    }
+
+    public int getArrivalTurn() {
+        return arrivalTurn;
+    }
+
+    public CustomerState getState() {
+        return state;
+    }
+
+    public void setState(CustomerState state) {
+        this.state = state;
+    }
+
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
 
     public boolean hasLeftOrPaid() {
         return state == CustomerState.PAID || state == CustomerState.CANCELLED;
