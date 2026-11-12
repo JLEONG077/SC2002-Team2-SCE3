@@ -1,4 +1,4 @@
-# README
+# Restaurant Rush
 
 ## Repository Structure
 
