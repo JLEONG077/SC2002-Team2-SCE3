@@ -1,4 +1,4 @@
-# Restaurant Rush
+# Restaurant Rush by johnPhone
 
 ## Repository Structure
 
