@@ -38,7 +38,7 @@ public class Waiter extends Staff {
                 if (c == null) {
                     return new ActionResult(false, "Customer ID " + action.getTargetId() + " has no ready order to serve.");
                 }
-                return serve(c.getOrder(), turn);
+                return serve(c, c.getOrder(), turn);
             }
             case WAIT: {
                 return new ActionResult(true, "Waiter waits.");
@@ -58,11 +58,12 @@ public class Waiter extends Staff {
         return new ActionResult(true, "Took order for Customer #" + customer.getId() + ": " + chosen.getName() + " ($" + (price/100.0) + ")");
     }
 
-    public ActionResult serve(Order order, int turn) {
+    public ActionResult serve(Customer customer, Order order, int turn) {
         if (order.getStatus() != OrderStatus.READY) {
             return new ActionResult(false, "Order is not ready yet.");
         }
         order.markServed();
-        return new ActionResult(true, "Served order.");
+        customer.setState(CustomerState.SERVED); 
+        return new ActionResult(true, "Served order for Customer #" + customer.getId() + ".");
     }
 }
