@@ -16,7 +16,7 @@ public class VIPCustomer extends Customer {
     @Override
     public int discount(int priceCents) {
         // 10% discount applied to the locked price (90% of price)
-        return (int) Math.round(priceCents * 0.90); 
+        return (priceCents * 90 + 50) / 100;
     }
 
     @Override

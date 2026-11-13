@@ -4,6 +4,7 @@ import control.GameConfig;
 import control.Outcome;
 import control.Restaurant;
 import entity.*;
+
 import java.util.List;
 import java.util.Scanner;
 
@@ -13,8 +14,14 @@ public class ConsoleUI {
     public void showTurnStart(Restaurant restaurant, int turn) {
         System.out.println("\n--------------------------------------------------");
         System.out.println("TURN " + turn + " / " + GameConfig.MAX_TURNS);
+        String avg = restaurant.getPaidCount() > 0 ? String.format("%.1f", restaurant.averagePaidSatisfaction()) : "N/A";
+        System.out.println("Revenue: $" + String.format("%.2f", restaurant.getRevenueCents() / 100.0)
+                + " | Avg Satisfaction (paid): " + avg);
         if (restaurant.isHappyHourActive()) {
-            System.out.println("[HAPPY HOUR ACTIVE - 20% OFF] Remaining turns: " + restaurant.getHappyHourTurnsRemaining());
+            System.out.println("[HAPPY HOUR ACTIVE - 20% OFF, +15 satisfaction] Turns remaining (incl. this one): "
+                    + restaurant.getHappyHourTurnsRemaining());
+        } else if (!restaurant.canActivateHappyHour()) {
+            System.out.println("[Happy Hour already used]");
         }
         System.out.println("--------------------------------------------------");
     }
@@ -31,7 +38,7 @@ public class ConsoleUI {
     }
 
     public StaffAction promptHostAction(Restaurant restaurant) {
-        System.out.println("\n--- Host Action (Seats at most 1 customer) ---");
+        System.out.println("\n--- Host Action (seats at most 1 queued customer) ---");
         printRestaurantStatus(restaurant);
         System.out.println("Choose Host Action:");
         System.out.println("1. SEAT customer (Enter customer ID)");
@@ -42,7 +49,10 @@ public class ConsoleUI {
             System.out.print("Enter Customer ID to seat: ");
             return new StaffAction(ActionType.SEAT, getIntInput());
         }
-        return new StaffAction(ActionType.WAIT, 0);
+        if (choice == 2) {
+            return new StaffAction(ActionType.WAIT, 0);
+        }
+        return null; // invalid -> controller reports error and re-prompts
     }
 
     public StaffAction promptWaiterAction(Restaurant restaurant) {
@@ -66,13 +76,15 @@ public class ConsoleUI {
                 System.out.print("Enter Customer ID to serve: ");
                 return new StaffAction(ActionType.SERVE, getIntInput());
             case 4:
-            default:
                 return new StaffAction(ActionType.WAIT, 0);
+            default:
+                return null; // invalid -> controller reports error and re-prompts
         }
     }
 
     public StaffAction promptChefAction(Restaurant restaurant) {
         System.out.println("\n--- Chef Action ---");
+        printRestaurantStatus(restaurant);
         List<Order> preparing = restaurant.getPreparingOrders();
         if (preparing.isEmpty()) {
             System.out.println("No orders currently in preparation.");
@@ -92,9 +104,10 @@ public class ConsoleUI {
         if (choice == 1) {
             System.out.print("Enter Customer ID for order to advance (or 0): ");
             return new StaffAction(ActionType.ADVANCE, getIntInput());
-        } else {
+        } else if (choice == 2) {
             return new StaffAction(ActionType.WAIT, 0);
         }
+        return null; // invalid -> controller reports error and re-prompts
     }
 
     public void showError(String reason) {
@@ -105,15 +118,21 @@ public class ConsoleUI {
         System.out.println("\n--- Turn " + turn + " Summary ---");
         float avgSat = restaurant.averagePaidSatisfaction();
         String avgSatStr = restaurant.getPaidCount() > 0 ? String.format("%.1f", avgSat) : "N/A";
-        System.out.println("Revenue: $" + String.format("%.2f", restaurant.getRevenueCents() / 100.0) + 
-                           " | Paid: " + restaurant.getPaidCount() + 
-                           " | Avg Satisfaction: " + avgSatStr);
+        System.out.println("Served: " + restaurant.getServedCount()
+                + " | Paid: " + restaurant.getPaidCount()
+                + " | Unhappy departures: " + restaurant.getDepartedCount());
+        System.out.println("Revenue: $" + String.format("%.2f", restaurant.getRevenueCents() / 100.0)
+                + " | Avg Satisfaction (paid): " + avgSatStr
+                + " | Turns used: " + turn + "/" + GameConfig.MAX_TURNS);
     }
 
     public void showResult(Outcome outcome, Restaurant restaurant) {
         System.out.println("\n==================================================");
         System.out.println("GAME OVER - RESULT: " + outcome);
         System.out.println("==================================================");
+        System.out.println("Paid customers: " + restaurant.getPaidCount() + " (need 4)");
+        System.out.println("Revenue: $" + String.format("%.2f", restaurant.getRevenueCents() / 100.0) + " (need $45.00)");
+        System.out.println("Avg satisfaction (paid): " + (restaurant.getPaidCount() > 0 ? String.format("%.1f", restaurant.averagePaidSatisfaction()) : "N/A") + " (need 60)");
         if (outcome == Outcome.VICTORY) {
             System.out.println("Congratulations! You successfully ran the restaurant!");
         } else {

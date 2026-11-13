@@ -16,6 +16,6 @@ public class Cashier {
         order.markPaid();
         oldestReadyToPay.setState(CustomerState.PAID);
         restaurant.recordPayment(oldestReadyToPay);
-        return new ActionResult(true, "Collected payment of $" + (order.getLockedPriceCents()/100.0) + " from Customer #" + oldestReadyToPay.getId());
+        return new ActionResult(true, "Collected payment of $" + String.format("%.2f", order.getLockedPriceCents() / 100.0) + " from Customer #" + oldestReadyToPay.getId());
     }
 }

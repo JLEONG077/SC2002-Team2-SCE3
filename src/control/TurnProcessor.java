@@ -6,6 +6,7 @@ import entity.*;
 public class TurnProcessor {
     private Restaurant restaurant;
     private ConsoleUI ui;
+    private Cashier cashier = new Cashier();
 
     public TurnProcessor(Restaurant restaurant, ConsoleUI ui) {
         this.restaurant = restaurant;
@@ -13,38 +14,39 @@ public class TurnProcessor {
     }
 
     public void runTurn(int turn) {
-        restaurant.onTurnStart(); // Trigger turn start policy updates
+        // ---- Start of turn: pricing policy tick, Step 1 arrivals, Happy Hour decision ----
+        restaurant.onTurnStart();
         processArrivals(turn);
 
-        // Optional Manager Happy Hour activation prompt at turn start
-        if (restaurant.canActivateHappyHour()) {
-            boolean wantHappyHour = ui.promptHappyHourActivation(restaurant);
-            if (wantHappyHour) {
-                if (restaurant.activateHappyHour()) {
-                    System.out.println("[Manager] Happy Hour activated successfully! 20% off active for 2 turns.");
-                }
+        if (restaurant.canActivateHappyHour() && ui.promptHappyHourActivation(restaurant)) {
+            if (restaurant.activateHappyHour()) {
+                System.out.println("[Manager] Happy Hour activated! 20% off new orders for this turn and the next.");
             }
         }
+        // Happy Hour recovery happens at turn start, for every active turn
+        restaurant.applyHappyHourRecovery();
 
-        // Host action
+        ui.showTurnStart(restaurant, turn);
+
+        // ---- Step 2: manager choices (Host, Waiter, Chef). Invalid choices re-prompt. ----
         Host host = restaurant.getHost();
-        if (host != null) {
-            StaffAction hostAction = ui.promptHostAction(restaurant);
-            if (hostAction != null && hostAction.getType() == ActionType.SEAT) {
-                ActionResult result = host.perform(hostAction, restaurant, turn);
-                if (result.isSuccess()) {
-                    System.out.println("[Host] " + result.getMessage());
-                } else {
-                    ui.showError(result.getMessage());
-                }
+        boolean hostDone = (host == null);
+        while (!hostDone) {
+            StaffAction action = ui.promptHostAction(restaurant);
+            ActionResult result = host.perform(action, restaurant, turn);
+            if (result.isSuccess()) {
+                System.out.println("[Host] " + result.getMessage());
+                hostDone = true;
+            } else {
+                ui.showError(result.getMessage());
             }
         }
 
+        // Step 3: Waiter acts before Chef, so a dish finished this turn cannot be served this turn
         boolean waiterDone = false;
         while (!waiterDone) {
             StaffAction action = ui.promptWaiterAction(restaurant);
-            Waiter waiter = restaurant.getWaiter();
-            ActionResult result = waiter.perform(action, restaurant, turn);
+            ActionResult result = restaurant.getWaiter().perform(action, restaurant, turn);
             if (result.isSuccess()) {
                 System.out.println("[Waiter] " + result.getMessage());
                 waiterDone = true;
@@ -56,8 +58,7 @@ public class TurnProcessor {
         boolean chefDone = false;
         while (!chefDone) {
             StaffAction action = ui.promptChefAction(restaurant);
-            Chef chef = restaurant.getChef();
-            ActionResult result = chef.perform(action, restaurant, turn);
+            ActionResult result = restaurant.getChef().perform(action, restaurant, turn);
             if (result.isSuccess()) {
                 System.out.println("[Chef] " + result.getMessage());
                 chefDone = true;
@@ -67,7 +68,7 @@ public class TurnProcessor {
         }
 
         processEatingAndPayment(turn);
-        applyWaitingLoss(turn);
+        applyWaitingLoss();
 
         ui.showTurnSummary(restaurant, turn);
     }
@@ -80,46 +81,36 @@ public class TurnProcessor {
         }
     }
 
+    /**
+     * Step 4. The Cashier pays out a customer who was ALREADY ready to pay at the start of this step
+     * (so someone who becomes READY_TO_PAY this turn pays next turn at the earliest). Then customers
+     * served on an EARLIER turn finish their turn of eating and become READY_TO_PAY.
+     */
     private void processEatingAndPayment(int turn) {
-        for (Table t : restaurant.getTables()) {
-            if (!t.isFree()) {
-                Customer c = t.getOccupant();
-                if (c.getState() == CustomerState.SERVED) {
-                    c.setState(CustomerState.EATING);
-                } else if (c.getState() == CustomerState.EATING) {
-                    c.setState(CustomerState.READY_TO_PAY);
-                }
-            }
-        }
-
-        Cashier cashier = new Cashier();
-        Customer readyToPay = restaurant.getOldestReadyToPayCustomer();
-        if (readyToPay != null) {
+        if (restaurant.getOldestReadyToPayCustomer() != null) {
             ActionResult paymentResult = cashier.collectPayment(restaurant, turn);
             if (paymentResult.isSuccess()) {
                 System.out.println("[Cashier] " + paymentResult.getMessage());
             }
         }
+
+        for (Table t : restaurant.getTables()) {
+            if (!t.isFree()) {
+                Customer c = t.getOccupant();
+                if (c.getState() == CustomerState.SERVED && c.getServedTurn() < turn) {
+                    c.setState(CustomerState.READY_TO_PAY);
+                }
+            }
+        }
     }
 
-    private void applyWaitingLoss(int turn) {
+    /** Step 5. Only customers who have not been served lose satisfaction; at 0 they leave. */
+    private void applyWaitingLoss() {
         for (Customer c : restaurant.getActiveCustomers()) {
-            if (!c.hasLeftOrPaid()) {
-                // Happy Hour recovery rule: +15 satisfaction if waiting for table or food
-                if (restaurant.isHappyHourActive() && (c.getState() == CustomerState.WAITING || c.getState() == CustomerState.SEATED || c.getState() == CustomerState.ORDERED || c.getState() == CustomerState.PREPARING)) {
-                    c.addSatisfaction(15);
-                } else {
-                    c.loseSatisfaction();
-                }
-
+            if (c.isAwaitingService()) {
+                c.loseSatisfaction();
                 if (c.getSatisfaction() <= 0) {
-                    c.cancel();
-                    for (Table t : restaurant.getTables()) {
-                        if (t.getOccupant() == c) {
-                            t.release();
-                            break;
-                        }
-                    }
+                    restaurant.customerLeaves(c);
                     System.out.println(c.getClass().getSimpleName() + " #" + c.getId() + " lost all satisfaction and left!");
                 }
             }

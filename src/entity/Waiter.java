@@ -9,6 +9,7 @@ public class Waiter extends Staff {
         super(name);
     }
 
+    @Override
     public ActionResult perform(StaffAction action, Restaurant restaurant, int turn) {
         if (action == null) {
             return new ActionResult(false, "No action specified.");
@@ -37,7 +38,11 @@ public class Waiter extends Staff {
                 if (c == null) {
                     return new ActionResult(false, "Customer ID " + action.getTargetId() + " has no ready order to serve.");
                 }
-                return serve(c, c.getOrder(), turn);
+                ActionResult served = serve(c, c.getOrder(), turn);
+                if (served.isSuccess()) {
+                    restaurant.recordServed();
+                }
+                return served;
             }
             case WAIT: {
                 return new ActionResult(true, "Waiter waits.");
@@ -60,15 +65,15 @@ public class Waiter extends Staff {
         Order order = new Order(chosen, finalPrice);
         customer.setOrder(order);
         customer.setState(CustomerState.ORDERED);
-        return new ActionResult(true, "Took order for " + customer.getClass().getSimpleName() + " #" + customer.getId() + ": " + chosen.getName() + " ($" + (finalPrice/100.0) + ")");
+        return new ActionResult(true, "Took order for " + customer.getClass().getSimpleName() + " #" + customer.getId() + ": " + chosen.getName() + " ($" + String.format("%.2f", finalPrice / 100.0) + ")");
     }
 
     public ActionResult serve(Customer customer, Order order, int turn) {
-        if (order.getStatus() != OrderStatus.READY) {
+        if (order.getStatus() != OrderStatus.READY || order.getReadyOnTurn() >= turn) {
             return new ActionResult(false, "Order is not ready yet.");
         }
         order.markServed();
-        customer.setState(CustomerState.SERVED);
+        customer.markServed(turn);
         return new ActionResult(true, "Served order for Customer #" + customer.getId() + ".");
     }
 }

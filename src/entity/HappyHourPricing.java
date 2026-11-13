@@ -12,7 +12,7 @@ public class HappyHourPricing implements PricingPolicy {
     @Override
     public int finalPrice(int cents) {
         // 20% off during happy hour
-        return (int) Math.round(cents * 0.80);
+        return (cents * 80 + 50) / 100;
     }
 
     @Override

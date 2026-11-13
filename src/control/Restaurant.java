@@ -15,6 +15,8 @@ public class Restaurant {
     private List<MenuItem> menu;
     private PricingPolicy pricing;
     private boolean happyHourUsed;
+    private int servedCount;
+    private int departedCount;
 
     public Restaurant() {
         this.revenueCents = 0;
@@ -48,6 +50,33 @@ public class Restaurant {
         activeCustomers.add(c);
     }
 
+    /** Happy Hour: customers still waiting for a table or food recover 15 satisfaction (max 100). */
+    public void applyHappyHourRecovery() {
+        if (!isHappyHourActive()) return;
+        for (Customer c : activeCustomers) {
+            if (c.isAwaitingService()) {
+                c.addSatisfaction(15);
+            }
+        }
+    }
+
+    /** Customer leaves unhappy: cancel order, leave queue, free table. */
+    public void customerLeaves(Customer c) {
+        c.cancel();
+        queue.remove(c);
+        for (Table t : tables) {
+            if (t.getOccupant() == c) {
+                t.release();
+                break;
+            }
+        }
+        departedCount++;
+    }
+
+    public void recordServed() { servedCount++; }
+    public int getServedCount() { return servedCount; }
+    public int getDepartedCount() { return departedCount; }
+
     public Customer findCustomerInQueue(int id) {
         for (Customer c : queue) {
             if (c.getId() == id) return c;
@@ -63,7 +92,7 @@ public class Restaurant {
     }
 
     public ActionResult seat(Customer c, Table t) {
-        if (!queue.contains(c)) {
+        if (c == null || !queue.contains(c)) {
             return new ActionResult(false, "Customer is not in the queue.");
         }
         if (!t.isFree()) {
