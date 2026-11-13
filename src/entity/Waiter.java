@@ -1,7 +1,7 @@
 package entity;
 
-import control.Restaurant;
 import java.util.List;
+import control.Restaurant;
 
 public class Waiter extends Staff {
 
