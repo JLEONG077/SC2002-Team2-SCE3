@@ -15,9 +15,20 @@ public class ConsoleUI {
         System.out.println("\n--------------------------------------------------");
         System.out.println("TURN " + turn + " / " + GameConfig.MAX_TURNS);
         if (restaurant.isHappyHourActive()) {
-            System.out.println("[HAPPY HOUR ACTIVE] Remaining turns: " + restaurant.getHappyHourTurnsRemaining());
+            System.out.println("[HAPPY HOUR ACTIVE - 20% OFF] Remaining turns: " + restaurant.getHappyHourTurnsRemaining());
         }
         System.out.println("--------------------------------------------------");
+    }
+
+    public boolean promptHappyHourActivation(Restaurant restaurant) {
+        System.out.println("\n--- Manager Decision ---");
+        System.out.println("Happy Hour is available to activate (Can be used once per game, lasts for 2 turns, gives 20% off orders & +15 satisfaction recovery).");
+        System.out.println("Do you want to activate Happy Hour this turn?");
+        System.out.println("1. Yes");
+        System.out.println("2. No");
+        System.out.print("Enter choice (1-2): ");
+        int choice = getIntInput();
+        return choice == 1;
     }
 
     public StaffAction promptHostAction(Restaurant restaurant) {
@@ -102,7 +113,7 @@ public class ConsoleUI {
 
     public void showResult(Outcome outcome, Restaurant restaurant) {
         System.out.println("\n==================================================");
-        System.out.println("GAME OVER - RESULT: " + outcome);
+        System.0ut.println("GAME OVER - RESULT: " + outcome);
         System.out.println("==================================================");
         if (outcome == Outcome.VICTORY) {
             System.out.println("Congratulations! You successfully ran the restaurant!");
