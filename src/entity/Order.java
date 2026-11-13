@@ -29,7 +29,7 @@ public class Order {
     }
 
     public void markServed() {
-        this.status = OrderStatus.READY;
+        this.status = OrderStatus.SERVED;
     }
 
     public void markPaid() {

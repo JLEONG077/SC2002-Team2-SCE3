@@ -18,11 +18,10 @@ public class GameController {
     }
 
     public void run() {
-        System.out.println("=== Welcome to Restaurant Rush: Stage 1 ===");
+        System.out.println("=== Welcome to Restaurant Rush: Stage 3 ===");
         TurnProcessor processor = new TurnProcessor(restaurant, ui);
 
         while (currentTurn <= GameConfig.MAX_TURNS) {
-            ui.showTurnStart(restaurant, currentTurn);
             processor.runTurn(currentTurn);
             currentTurn++;
         }

@@ -9,6 +9,7 @@ public abstract class Customer {
     protected int arrivalTurn;
     protected CustomerState state;
     protected Order order;
+    protected int servedTurn = -1;
 
     public Customer(int arrivalTurn) {
         this.id = idCounter++;
@@ -67,12 +68,28 @@ public abstract class Customer {
         this.state = state;
     }
 
+    public int getServedTurn() {
+        return servedTurn;
+    }
+
+    public void markServed(int turn) {
+        this.servedTurn = turn;
+        this.state = CustomerState.SERVED;
+    }
+
     public Order getOrder() {
         return order;
     }
 
     public void setOrder(Order order) {
         this.order = order;
+    }
+
+    /** True while the customer is waiting for a table or for their food to be served. */
+    public boolean isAwaitingService() {
+        return state == CustomerState.WAITING || state == CustomerState.SEATED
+            || state == CustomerState.ORDERED || state == CustomerState.PREPARING
+            || state == CustomerState.READY;
     }
 
     public boolean hasLeftOrPaid() {

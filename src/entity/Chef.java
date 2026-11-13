@@ -10,6 +10,7 @@ public class Chef extends Staff {
         super(name);
     }
 
+    @Override
     public ActionResult perform(StaffAction action, Restaurant restaurant, int turn) {
         if (action == null) {
             return new ActionResult(false, "No action specified.");
@@ -29,7 +30,10 @@ public class Chef extends Staff {
                         }
                     }
                 }
-                if (targetOrder == null && !preparingOrders.isEmpty()) {
+                if (targetOrder == null) {
+                    if (action.getTargetId() > 0) {
+                        return new ActionResult(false, "Customer ID " + action.getTargetId() + " has no order in preparation.");
+                    }
                     targetOrder = preparingOrders.get(0);
                 }
                 boolean becameReady = targetOrder.advance(turn);

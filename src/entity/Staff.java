@@ -7,6 +7,8 @@ public abstract class Staff {
         this.name = name;
     }
 
+    public abstract ActionResult perform(StaffAction action, control.Restaurant restaurant, int turn);
+
     public String getName() {
         return name;
     }
