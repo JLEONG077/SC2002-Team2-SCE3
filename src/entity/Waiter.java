@@ -1,7 +1,7 @@
 package entity;
 
-import java.util.List;
 import control.Restaurant;
+import java.util.List;
 
 public class Waiter extends Staff {
 
@@ -9,7 +9,6 @@ public class Waiter extends Staff {
         super(name);
     }
 
-    @Override
     public ActionResult perform(StaffAction action, Restaurant restaurant, int turn) {
         if (action == null) {
             return new ActionResult(false, "No action specified.");
