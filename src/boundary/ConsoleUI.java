@@ -4,7 +4,6 @@ import control.GameConfig;
 import control.Outcome;
 import control.Restaurant;
 import entity.*;
-
 import java.util.List;
 import java.util.Scanner;
 
@@ -113,7 +112,7 @@ public class ConsoleUI {
 
     public void showResult(Outcome outcome, Restaurant restaurant) {
         System.out.println("\n==================================================");
-        System.0ut.println("GAME OVER - RESULT: " + outcome);
+        System.out.println("GAME OVER - RESULT: " + outcome);
         System.out.println("==================================================");
         if (outcome == Outcome.VICTORY) {
             System.out.println("Congratulations! You successfully ran the restaurant!");
