@@ -13,7 +13,18 @@ public class TurnProcessor {
     }
 
     public void runTurn(int turn) {
+        restaurant.onTurnStart(); // Trigger turn start policy updates
         processArrivals(turn);
+
+        // Optional Manager Happy Hour activation prompt at turn start
+        if (restaurant.canActivateHappyHour()) {
+            boolean wantHappyHour = ui.promptHappyHourActivation(restaurant);
+            if (wantHappyHour) {
+                if (restaurant.activateHappyHour()) {
+                    System.out.println("[Manager] Happy Hour activated successfully! 20% off active for 2 turns.");
+                }
+            }
+        }
 
         // Host action
         Host host = restaurant.getHost();
@@ -57,10 +68,6 @@ public class TurnProcessor {
 
         processEatingAndPayment(turn);
         applyWaitingLoss(turn);
-
-        if (restaurant.isHappyHourActive()) {
-            restaurant.decrementHappyHour();
-        }
 
         ui.showTurnSummary(restaurant, turn);
     }

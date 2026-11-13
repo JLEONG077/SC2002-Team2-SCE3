@@ -13,8 +13,8 @@ public class Restaurant {
     private Queue<Customer> queue;
     private List<Customer> activeCustomers;
     private List<MenuItem> menu;
-    private int happyHourTurnsRemaining = 0;
-    private boolean happyHourUsed = false;
+    private PricingPolicy pricing;
+    private boolean happyHourUsed;
 
     public Restaurant() {
         this.revenueCents = 0;
@@ -25,7 +25,7 @@ public class Restaurant {
         this.staff = new ArrayList<>();
         this.staff.add(new Waiter("Alice"));
         this.staff.add(new Chef("Bob"));
-        this.staff.add(new Host("Charlie")); // Host added for Stage 3
+        this.staff.add(new Host("Charlie"));
         
         this.queue = new LinkedList<>();
         this.activeCustomers = new ArrayList<>();
@@ -37,9 +37,9 @@ public class Restaurant {
         this.menu.add(salad);
         this.menu.add(burger);
         this.menu.add(pasta);
-        this.menu.add(new ComboMeal(salad, pasta)); // Combo Meal
+        this.menu.add(new ComboMeal(salad, pasta));
 
-        this.happyHourTurnsRemaining = 0;
+        this.pricing = new StandardPricing();
         this.happyHourUsed = false;
     }
 
@@ -169,25 +169,38 @@ public class Restaurant {
         return count;
     }
 
+    public void setPricing(PricingPolicy policy) {
+        this.pricing = policy;
+    }
+
+    public int priceFor(int cents) {
+        return pricing.finalPrice(cents);
+    }
+
     public boolean activateHappyHour() {
-        if (happyHourUsed || happyHourTurnsRemaining > 0) return false;
+        if (happyHourUsed || isHappyHourActive()) return false;
         happyHourUsed = true;
-        happyHourTurnsRemaining = 2; // Lasts for that turn and the next
+        this.pricing = new HappyHourPricing(2); // Lasts for that turn and the next (2 turns)
         return true;
     }
 
-    public void decrementHappyHour() {
-        if (happyHourTurnsRemaining > 0) {
-            happyHourTurnsRemaining--;
+    public void onTurnStart() {
+        pricing.onTurnStart(this);
+        if (pricing.remainingTurns() <= 0 && happyHourUsed && !(pricing instanceof StandardPricing)) {
+            this.pricing = new StandardPricing();
         }
     }
 
     public boolean isHappyHourActive() {
-        return happyHourTurnsRemaining > 0;
+        return pricing.remainingTurns() > 0;
     }
 
     public int getHappyHourTurnsRemaining() {
-        return happyHourTurnsRemaining;
+        return pricing.remainingTurns();
+    }
+
+    public boolean canActivateHappyHour() {
+        return !happyHourUsed && !isHappyHourActive();
     }
 
     public List<Table> getTables() { return tables; }
