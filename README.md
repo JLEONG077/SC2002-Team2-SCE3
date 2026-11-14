@@ -4,6 +4,11 @@
 
 ```text
 SC2002-Team2-SCE3/
+└── diagrams                      # Folder containing diagrams
+│   ├── happyhour_sequence.pdf    
+│   ├── stage1_class.pdf        
+│   ├── stage2_class.pdf
+│   ├── stage3_class_v2.pdf
 ├── src/
 │   ├── Main.java                 # Application entry point
 │   ├── boundary/
